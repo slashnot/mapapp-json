@@ -1,28 +1,38 @@
-var jsonServer = require('json-server');
+var http = require('http');
+var sockjs = require('sockjs');
+var node_static = require('node-static');
 
-var server = jsonServer.create();
+// 1. Echo sockjs server
+var sockjs_opts = { sockjs_url: "http://cdn.jsdelivr.net/sockjs/1.0.1/sockjs.min.js" };
 
-server.set('port', (process.env.PORT || 5000));
+var sockjs_echo = sockjs.createServer(sockjs_opts);
+sockjs_echo.on('connection', function (conn) {
+    conn.on('data', function (message) {
+        conn.write(message + 'from Server');
+    });
+    var count = 0;
+    if (count <= 40) {
+        setInterval(function () {
+            count++;
+            conn.write("Data-->" + Math.floor(Math.random() * (10 - 1) + 1));
+        }, 1000);
+    }
 
-server.use(jsonServer.defaults());
+});
 
-var router = jsonServer.router('soki.json');
+// 2. Static files server
+var static_directory = new node_static.Server(__dirname);
 
-//Custom Routes
-// Add this before server.use(router)
-server.use(jsonServer.rewriter({
-  '/api/': '/',
-  '/v1/users/login': '/login',
-  '/v1/users/profile': '/profile',
-  '/v1/transactions':'/transactions',
-  '/v1/balances':'/balances',
-  '/v1/updates':'/updates',
-  '/v1/tickets':'/tickets',
-  '/v1/neighbours':'/neighbours',
-  '/v1/access':'/access'
-}));
+// 3. Usual http stuff
+var server = http.createServer();
+server.addListener('request', function (req, res) {
+    static_directory.serve(req, res);
+});
+server.addListener('upgrade', function (req, res) {
+    res.end();
+});
 
-server.use(router);
+sockjs_echo.installHandlers(server, { prefix: '/echo' });
 
 server.listen(server.get('port'), function() {
   console.log('Node app is running on port', server.get('port'));

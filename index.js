@@ -34,6 +34,5 @@ server.addListener('upgrade', function (req, res) {
 
 sockjs_echo.installHandlers(server, { prefix: '/echo' });
 
-server.listen(server.get('port'), function() {
-  console.log('Node app is running on port', server.get('port'));
-});
+console.log(' [*] Listening on 127.0.0.1:9999');
+server.listen(9999, '127.0.0.1');

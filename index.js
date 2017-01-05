@@ -6,8 +6,21 @@ server.set('port', (process.env.PORT || 5000));
 
 server.use(jsonServer.defaults());
 
-var router = jsonServer.router('data.json');
+var router = jsonServer.router('soki.json');
 
+//Custom Routes
+// Add this before server.use(router)
+server.use(jsonServer.rewriter({
+  '/api/': '/',
+  '/v1/users/login': '/login',
+  '/v1/users/profile': '/profile',
+  '/v1/transactions':'/transactions',
+  '/v1/balances':'/balances',
+  '/v1/updates':'/updates',
+  '/v1/tickets':'/tickets',
+  '/v1/neighbours':'/neighbours',
+  '/v1/access':'/access'
+}));
 
 server.use(router);
 
